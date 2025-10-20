@@ -1,5 +1,5 @@
 {
-	"name": "@zauth",
+	"name": "zauth",
 	"description": "A minimal, type-safe, and framework-agnostic authentication core for TypeScript with Drizzle ORM and session cookies.",
 	"version": "0.1.0",
 	"type": "module",

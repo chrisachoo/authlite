@@ -17,9 +17,9 @@ Zauth is a tiny authentication core that focuses on: light footprint, great DX, 
 Pick one of the DB stacks (SQLite shown). Using pnpm:
 
 ```bash
-pnpm add @zauth drizzle-orm @libsql/client
+pnpm add zauth drizzle-orm @libsql/client
 # or if you use better-sqlite3:
-pnpm add @zauth drizzle-orm better-sqlite3
+pnpm add zauth drizzle-orm better-sqlite3
 ```
 
 Dev tools (optional but recommended):
@@ -56,9 +56,9 @@ export const db = (() => {
 
 ```ts
 // auth.ts
-import { createAuth } from "@zauth"
-import { drizzleSQLiteAdapter } from "@zauth/drizzle-sqlite"
-import type { AuthConfig } from "@zauth/types"
+import { createAuth } from "zauth"
+import { drizzleSQLiteAdapter } from "zauth/drizzle-sqlite"
+import type { AuthConfig } from "zauth/types"
 import { db } from "./db"
 
 export const auth = createAuth({
@@ -197,7 +197,7 @@ We use Vitest. The repo includes a minimal in-memory test to validate signup/ses
 Small utilities to keep your app code clean (optional):
 
 ```ts
-import { guard, sessionMiddleware } from "@zauth"
+import { guard, sessionMiddleware } from "zauth"
 import { auth } from "./auth"
 
 app.use("*", sessionMiddleware(auth))
@@ -208,10 +208,10 @@ app.get("/me", guard(), c => c.json({ user: c.get("user") }))
 
 ## Import map summary
 
-- **Core API**: `import { createAuth } from "@zauth"`
-- **Types**: `import type { AuthConfig, DrizzleAdapter } from "@zauth/types"`
-- **Adapters**: `import { drizzleSQLiteAdapter } from "@zauth/drizzle-sqlite"`
-- **Middleware helpers**: `import { guard, sessionMiddleware } from "@zauth"`
+- **Core API**: `import { createAuth } from "zauth"`
+- **Types**: `import type { AuthConfig, DrizzleAdapter } from "zauth/types"`
+- **Adapters**: `import { drizzleSQLiteAdapter } from "zauth/drizzle-sqlite"`
+- **Middleware helpers**: `import { guard, sessionMiddleware } from "zauth"`
 
 This structure keeps imports predictable and tree-shakeable.
 
@@ -222,15 +222,15 @@ This structure keeps imports predictable and tree-shakeable.
 1) Configure DB and adapter
 
 ```ts
-import { drizzleSQLiteAdapter } from "@zauth/drizzle-sqlite"
+import { drizzleSQLiteAdapter } from "zauth/drizzle-sqlite"
 import { db } from "./db"
 ```
 
 2) Create the auth instance
 
 ```ts
-import { createAuth } from "@zauth"
-import type { AuthConfig } from "@zauth/types"
+import { createAuth } from "zauth"
+import type { AuthConfig } from "zauth/types"
 
 export const auth = createAuth({
 	secret: process.env.AUTH_SECRET!,
