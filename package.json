@@ -1,0 +1,49 @@
+{
+	"name": "@zauth/core",
+	"description": "A minimal, type-safe, and framework-agnostic authentication core for TypeScript with Drizzle ORM and session cookies.",
+	"version": "0.1.0",
+	"type": "module",
+	"publishConfig": {
+		"access": "public"
+	},
+	"main": "dist/index.js",
+	"module": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"scripts": {
+		"build": "tsup",
+		"format": "prettier --write .",
+		"lint:fix": "eslint . --fix",
+		"lint": "eslint . --quiet",
+		"migrate": "node ./scripts/run-migrations.js",
+		"test": "pnpm run build && vitest run",
+		"schema:print": "ts-node ./scripts/print-schema.ts || node --loader ts-node/esm ./scripts/print-schema.ts || node ./scripts/print-schema.ts",
+		"prepublishOnly": "pnpm run build && pnpm run lint && pnpm run format && pnpm run test"
+	},
+	"keywords": [
+		"auth",
+		"authentication",
+		"authorization",
+		"oauth",
+		"zauth-core",
+		"zauth"
+	],
+	"dependencies": {
+		"@libsql/client": "^0.15.15",
+		"@node-rs/argon2": "^2.0.2",
+		"@paralleldrive/cuid2": "^3.1.0",
+		"drizzle-orm": "^0.44.6",
+		"ioredis": "^5.8.1",
+		"valibot": "^1.1.0"
+	},
+	"devDependencies": {
+		"@antfu/eslint-config": "^6.0.0",
+		"@types/node": "^24.9.0",
+		"eslint": "^9.37.0",
+		"eslint-plugin-format": "^1.0.2",
+		"eslint-plugin-perfectionist": "^4.15.1",
+		"prettier": "3.6.2",
+		"tsup": "^8.5.0",
+		"typescript": "^5.9.3",
+		"vitest": "^3.2.4"
+	}
+}

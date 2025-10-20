@@ -1,0 +1,16 @@
+{
+  "arrowParens": "always",
+  "plugins": [
+    "prettier-plugin-tailwindcss"
+  ],
+  "printWidth": 80,
+  "quoteProps": "as-needed",
+  "semi": false,
+  "tabWidth": 2,
+  "useTabs": true,
+  "tailwindFunctions": [
+    "clsx"
+  ],
+  "tailwindStylesheet": "apps/web/app/app.css",
+  "trailingComma": "none"
+}
