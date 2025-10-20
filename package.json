@@ -33,7 +33,7 @@
 		"migrate": "node ./scripts/run-migrations.js",
 		"test": "pnpm run build && vitest run",
 		"schema:print": "ts-node ./scripts/print-schema.ts || node --loader ts-node/esm ./scripts/print-schema.ts || node ./scripts/print-schema.ts",
-		"prepublishOnly": "pnpm run build && pnpm run lint && pnpm run format && pnpm run test"
+		"prepublishOnly": "pnpm run build && pnpm run lint && pnpm run test"
 	},
 	"keywords": [
 		"auth",
