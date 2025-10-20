@@ -1,8 +1,24 @@
 {
-	"name": "@zauth/core",
+	"name": "@zauth",
 	"description": "A minimal, type-safe, and framework-agnostic authentication core for TypeScript with Drizzle ORM and session cookies.",
 	"version": "0.1.0",
 	"type": "module",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js",
+			"require": "./dist/index.cjs"
+		},
+		"./types": {
+			"types": "./dist/types.d.ts",
+			"default": "./dist/types.js"
+		},
+		"./drizzle-sqlite": {
+			"types": "./dist/drizzle-sqlite.d.ts",
+			"import": "./dist/drizzle-sqlite.js",
+			"require": "./dist/drizzle-sqlite.cjs"
+		}
+	},
 	"publishConfig": {
 		"access": "public"
 	},

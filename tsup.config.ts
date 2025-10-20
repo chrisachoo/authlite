@@ -3,7 +3,11 @@ import { defineConfig } from "tsup"
 export default defineConfig({
 	clean: true,
 	dts: true,
-	entry: ["src/index.ts"],
+	entry: {
+		index: "src/index.ts",
+		types: "src/types.entry.ts",
+		"drizzle-sqlite": "src/adapters/drizzle-sqlite.ts"
+	},
 	external: ["better-sqlite3", "drizzle-orm", "ioredis", "@node-rs/argon2"],
 	format: ["esm", "cjs"],
 	minify: false,
