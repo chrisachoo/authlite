@@ -71,6 +71,6 @@
 		"vitest": "^3.2.4"
 	},
 	"lint-staged": {
-		"**/*.{js,mjs,cjs,ts,mts,cts,yml,json}": "pnpm lint:fix"
+		"**/*.{js,mjs,cjs,ts,mts,cts,yml,json}": "eslint --fix"
 	}
 }
