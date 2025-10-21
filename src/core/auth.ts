@@ -29,21 +29,20 @@ export function createAuth(config: AuthConfig): AuthInstance {
 	const adapter = config.database
 	const cache = config.cache ?? null
 	const ttlMs = config.session?.ttlMs ?? 1000 * 60 * 60 * 24 * 7
-	const cookieName = config.session?.cookieName ?? "zauth"
+	const cookieName = config.session?.cookieName ?? "authlite"
 	const _rotateEveryMs = config.session?.rotateEveryMs ?? 0
 	const verificationEmailTTL = config.verification?.emailTTLms ?? 1000 * 60 * 60 * 24
 	const passwordResetTTL = config.verification?.passwordResetTTLms ?? 1000 * 60 * 60
 
 	// basic config validation
 	if (!config.secret || config.secret.length < 16)
-		throw new Error("zauth: secret must be set and at least 16 chars")
+		throw new Error("authlite: secret must be set and at least 16 chars")
 	if (ttlMs <= 0)
-		throw new Error("zauth: session.ttlMs must be > 0")
+		throw new Error("authlite: session.ttlMs must be > 0")
 	if (config.emailAndPassword?.enabled) {
-		const need = ["createUser", "createAccount", "findUserByEmail", "findAccountByProvider"] as const
-		for (const k of need) {
+		for (const k of ["createUser", "findUserByEmail"]) {
 			if (!(adapter as any)[k])
-				throw new Error(`zauth: credentials flow requires adapter.${k}`)
+				throw new Error(`authlite: credentials flow requires adapter.${k}`)
 		}
 	}
 

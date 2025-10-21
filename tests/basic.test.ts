@@ -93,14 +93,14 @@ describe("auth core", () => {
 			database,
 			emailAndPassword: { enabled: true },
 			secret: "test_secret_very_secure_123",
-			session: { cookieName: "zauth", ttlMs: 1000 }
+			session: { cookieName: "authlite", ttlMs: 1000 }
 		})
 
 		const { session, user } = await auth.api.signUp!({ email: "a@b.com", name: "A", password: "password123" })
 		expect(user.id).toBeTruthy()
 		expect(session.token).toBeTruthy()
 
-		const got = await auth.api.getSession({ headers: new Headers({ cookie: `zauth=${session.token}` }) })
+		const got = await auth.api.getSession({ headers: new Headers({ cookie: `authlite=${session.token}` }) })
 		expect(got).toBeTruthy()
 	})
 })

@@ -1,10 +1,19 @@
 /* eslint-disable no-console */
-import fs from "node:fs"
+import fs from "node:fs";
 
-import Database from "better-sqlite3"
+import { createClient } from "@libsql/client";
 
 const sql = fs.readFileSync(new URL("../migrations/0001_create_tables.sql", import.meta.url), "utf8")
-const db = new Database("./zauth.sqlite")
-db.exec(sql)
-console.log("migrations applied")
-db.close()
+
+;(async () => {
+	try {
+		const client = createClient({ url: "file:authlite.sqlite" })
+		await client.executeMultiple(sql)
+		console.log("migrations applied")
+		await client.close()
+	}
+	catch (err) {
+		console.error("migration failed", err)
+		process.exit(1)
+	}
+})()

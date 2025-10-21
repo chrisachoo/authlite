@@ -1,6 +1,6 @@
-## 🛡️ zauth — Lightweight, framework-agnostic auth for TypeScript
+## 🛡️ authlite — Lightweight, framework-agnostic auth for TypeScript
 
-Zauth is a tiny authentication core that focuses on: light footprint, great DX, web standards (HttpOnly cookies, HMAC tokens), and no vendor lock-in. Start with Drizzle + SQLite today; Postgres and Prisma are on the roadmap.
+Lightauth is a tiny authentication core that focuses on: light footprint, great DX, web standards (HttpOnly cookies, HMAC tokens), and no vendor lock-in. Start with Drizzle + SQLite today; Postgres and Prisma are on the roadmap.
 
 ### Highlights
 
@@ -17,9 +17,9 @@ Zauth is a tiny authentication core that focuses on: light footprint, great DX, 
 Pick one of the DB stacks (SQLite shown). Using pnpm:
 
 ```bash
-pnpm add zauth drizzle-orm @libsql/client
+pnpm add authlite drizzle-orm @libsql/client
 # or if you use better-sqlite3:
-pnpm add zauth drizzle-orm better-sqlite3
+pnpm add authlite drizzle-orm better-sqlite3
 ```
 
 Dev tools (optional but recommended):
@@ -52,20 +52,20 @@ export const db = (() => {
 })()
 ```
 
-2. Initialize Zauth:
+2. Initialize Lightauth:
 
 ```ts
 // auth.ts
-import { createAuth } from "zauth"
-import { drizzleSQLiteAdapter } from "zauth/drizzle-sqlite"
-import type { AuthConfig } from "zauth/types"
+import { createAuth } from "authlite"
+import { drizzleSQLiteAdapter } from "authlite/drizzle-sqlite"
+import type { AuthConfig } from "authlite/types"
 import { db } from "./db"
 
 export const auth = createAuth({
 	database: drizzleSQLiteAdapter(db),
 	emailAndPassword: { enabled: true },
 	secret: "replace_me_with_strong_secret",
-	session: { cookieName: "zauth", ttlMs: 1000 * 60 * 60 * 24 * 7 },
+	session: { cookieName: "authlite", ttlMs: 1000 * 60 * 60 * 24 * 7 },
 	socialProviders: {
 		github: { clientId: "GITHUB_CLIENT_ID", clientSecret: "GITHUB_CLIENT_SECRET" }
 	}
@@ -99,7 +99,7 @@ app.get("/session", async (c) => {
 })
 
 app.post("/signout", async (c) => {
-	const token = c.req.cookie("zauth") // or read from headers
+	const token = c.req.cookie("authlite") // or read from headers
 	if (token)
 		await auth.api.revokeSession(token)
 	return c.json({ ok: true })
@@ -154,7 +154,7 @@ type AuthConfig = {
 
 ## Adapters (bring your own DB)
 
-Zauth is not tied to a specific ORM. Today we ship a Drizzle + SQLite adapter. To support other databases/ORMs, implement the small `DrizzleAdapter` interface (see `src/types.ts`). Minimal required methods:
+Lightauth is not tied to a specific ORM. Today we ship a Drizzle + SQLite adapter. To support other databases/ORMs, implement the small `DrizzleAdapter` interface (see `src/types.ts`). Minimal required methods:
 
 - `findUserById(id)`
 - `findSessionByHash(hash)`
@@ -197,7 +197,7 @@ We use Vitest. The repo includes a minimal in-memory test to validate signup/ses
 Small utilities to keep your app code clean (optional):
 
 ```ts
-import { guard, sessionMiddleware } from "zauth"
+import { guard, sessionMiddleware } from "authlite"
 import { auth } from "./auth"
 
 app.use("*", sessionMiddleware(auth))
@@ -208,10 +208,10 @@ app.get("/me", guard(), c => c.json({ user: c.get("user") }))
 
 ## Import map summary
 
-- **Core API**: `import { createAuth } from "zauth"`
-- **Types**: `import type { AuthConfig, DrizzleAdapter } from "zauth/types"`
-- **Adapters**: `import { drizzleSQLiteAdapter } from "zauth/drizzle-sqlite"`
-- **Middleware helpers**: `import { guard, sessionMiddleware } from "zauth"`
+- **Core API**: `import { createAuth } from "authlite"`
+- **Types**: `import type { AuthConfig, DrizzleAdapter } from "authlite/types"`
+- **Adapters**: `import { drizzleSQLiteAdapter } from "authlite/drizzle-sqlite"`
+- **Middleware helpers**: `import { guard, sessionMiddleware } from "authlite"`
 
 This structure keeps imports predictable and tree-shakeable.
 
@@ -222,15 +222,15 @@ This structure keeps imports predictable and tree-shakeable.
 1) Configure DB and adapter
 
 ```ts
-import { drizzleSQLiteAdapter } from "zauth/drizzle-sqlite"
+import { drizzleSQLiteAdapter } from "authlite/drizzle-sqlite"
 import { db } from "./db"
 ```
 
 2) Create the auth instance
 
 ```ts
-import { createAuth } from "zauth"
-import type { AuthConfig } from "zauth/types"
+import { createAuth } from "authlite"
+import type { AuthConfig } from "authlite/types"
 
 export const auth = createAuth({
 	secret: process.env.AUTH_SECRET!,

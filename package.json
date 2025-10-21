@@ -1,5 +1,5 @@
 {
-	"name": "zauth",
+	"name": "authlite",
 	"description": "A minimal, type-safe, and framework-agnostic authentication core for TypeScript with Drizzle ORM and session cookies.",
 	"version": "0.1.0",
 	"type": "module",
@@ -40,8 +40,8 @@
 		"authentication",
 		"authorization",
 		"oauth",
-		"zauth-core",
-		"zauth"
+		"authlite-core",
+		"authlite"
 	],
 	"dependencies": {
 		"@libsql/client": "^0.15.15",
