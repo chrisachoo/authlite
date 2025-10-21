@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
-import fs from "node:fs";
+import fs from "node:fs"
 
-import { createClient } from "@libsql/client";
+import { createClient } from "@libsql/client"
 
 const sql = fs.readFileSync(new URL("../migrations/0001_create_tables.sql", import.meta.url), "utf8")
 

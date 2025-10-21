@@ -1,2 +1,1 @@
-export type { AuthConfig, AuthInstance, DrizzleAdapter, ProviderConfig, RedisCacheAdapter } from "./types";
-
+export type { AuthConfig, AuthInstance, DrizzleAdapter, ProviderConfig, RedisCacheAdapter } from "./types"
