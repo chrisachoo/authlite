@@ -13,6 +13,11 @@
 			"types": "./dist/types.d.ts",
 			"default": "./dist/types.js"
 		},
+		"./helper": {
+			"types": "./dist/helper.d.ts",
+			"import": "./dist/helper.js",
+			"require": "./dist/helper.cjs"
+		},
 		"./drizzle-sqlite": {
 			"types": "./dist/drizzle-sqlite.d.ts",
 			"import": "./dist/drizzle-sqlite.js",

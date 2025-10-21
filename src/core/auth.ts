@@ -332,8 +332,148 @@ export function createAuth(config: AuthConfig): AuthInstance {
 		return rows.map(r => ({ createdAt: r.createdAt, expiresAt: r.expiresAt, id: r.id, ipAddress: r.ipAddress ?? null, userAgent: r.userAgent ?? null }))
 	}
 
-	async function handler(_req: Request): Promise<Response> {
-		return new Response(JSON.stringify({ ok: true }), { headers: { "content-type": "application/json" }, status: 200 })
+	async function handler(req: Request): Promise<Response> {
+		const url = new URL(req.url)
+		const pathname = url.pathname
+		const method = req.method.toUpperCase()
+		const json = (data: any, status = 200, init: ResponseInit = {}) => new Response(JSON.stringify(data), { ...init, headers: { "content-type": "application/json", ...(init.headers ?? {}) }, status })
+		const noContent = (init: ResponseInit = {}) => new Response(null, { ...init, status: init.status ?? 204 })
+
+		try {
+			// Discover allowed methods for this path for better 405 handling
+			let allowed: null | string[] = null
+			// base routes
+			if (pathname.endsWith("/session"))
+				allowed = ["GET"]
+			else if (pathname.endsWith("/session/rotate"))
+				allowed = ["POST"]
+			else if (pathname.endsWith("/signout"))
+				allowed = ["POST"]
+			else if (pathname.endsWith("/devices"))
+				allowed = ["GET"]
+			// credentials
+			if (config.emailAndPassword?.enabled) {
+				if (pathname.endsWith("/signup"))
+					allowed = ["POST"]
+				else if (pathname.endsWith("/signin"))
+					allowed = ["POST"]
+				else if (pathname.endsWith("/verify/request"))
+					allowed = ["POST"]
+				else if (pathname.endsWith("/verify"))
+					allowed = ["POST"]
+				else if (pathname.endsWith("/password/reset/request"))
+					allowed = ["POST"]
+				else if (pathname.endsWith("/password/reset"))
+					allowed = ["POST"]
+			}
+			// oauth
+			if (config.socialProviders) {
+				if (/\/oauth\/(?:github|discord|microsoft)\/redirect$/.test(pathname))
+					allowed = ["GET"]
+				else if (/\/oauth\/(?:github|discord|microsoft)\/callback$/.test(pathname))
+					allowed = ["GET"]
+			}
+			// Session info
+			if (method === "GET" && pathname.endsWith("/session")) {
+				const session = await getSession({ headers: req.headers })
+				return json(session)
+			}
+
+			// Rotate session
+			if (method === "POST" && pathname.endsWith("/session/rotate")) {
+				const rotated = await rotateSession({ headers: req.headers })
+				if (!rotated)
+					return json({ error: "no_session", ok: false }, 401)
+				return json({ ok: true, session: { expiresAt: rotated.expiresAt } }, { headers: { "set-cookie": rotated.cookie } } as any)
+			}
+
+			// Sign out (revoke)
+			if (method === "POST" && pathname.endsWith("/signout")) {
+				const cookieHeader = req.headers.get("cookie") ?? ""
+				const raw = readCookie(cookieHeader, cookieName)
+				if (raw)
+					await revokeSession(raw).catch(() => {})
+				return noContent()
+			}
+
+			// Credentials: signup/signin
+			if (config.emailAndPassword?.enabled) {
+				if (method === "POST" && pathname.endsWith("/signup")) {
+					const body = await req.json().catch(() => ({}))
+					const out = await signUp(body)
+					return json({ session: { expiresAt: out.session.expiresAt }, user: out.user }, { headers: { "set-cookie": out.session.cookie } } as any)
+				}
+				if (method === "POST" && pathname.endsWith("/signin")) {
+					const body = await req.json().catch(() => ({}))
+					const out = await signIn(body)
+					return json({ session: { expiresAt: out.session.expiresAt }, user: out.user }, { headers: { "set-cookie": out.session.cookie } } as any)
+				}
+				if (method === "POST" && pathname.endsWith("/verify/request")) {
+					const body = await req.json().catch(() => ({}))
+					const out = await requestEmailVerification(body)
+					return json(out)
+				}
+				if (method === "POST" && pathname.endsWith("/verify")) {
+					const body = await req.json().catch(() => ({}))
+					const out = await verifyEmail(body)
+					return json(out)
+				}
+				if (method === "POST" && pathname.endsWith("/password/reset/request")) {
+					const body = await req.json().catch(() => ({}))
+					const out = await requestPasswordReset(body)
+					return json(out)
+				}
+				if (method === "POST" && pathname.endsWith("/password/reset")) {
+					const body = await req.json().catch(() => ({}))
+					const out = await resetPassword(body)
+					return json(out)
+				}
+			}
+
+			// OAuth
+			if (config.socialProviders) {
+				if (method === "GET" && /\/oauth\/(?:github|discord|microsoft)\/redirect$/.test(pathname)) {
+					const match = pathname.match(/\/oauth\/(github|discord|microsoft)\/redirect$/)!
+					const provider = (match?.[1] ?? "github") as "discord" | "github" | "microsoft"
+					const redirectUri = url.searchParams.get("redirect_uri") ?? undefined
+					const state = url.searchParams.get("state") ?? undefined
+					const { url: redirectUrl } = await oauthRedirect(provider, { redirectUri, state })
+					return new Response(null, { headers: { location: redirectUrl }, status: 302 })
+				}
+				if (method === "GET" && /\/oauth\/(?:github|discord|microsoft)\/callback$/.test(pathname)) {
+					const match = pathname.match(/\/oauth\/(github|discord|microsoft)\/callback$/)!
+					const provider = (match?.[1] ?? "github") as "discord" | "github" | "microsoft"
+					const code = url.searchParams.get("code") ?? ""
+					const state = url.searchParams.get("state") ?? undefined
+					const redirectUri = url.searchParams.get("redirect_uri") ?? undefined
+					const { session, user } = await oauthCallback(provider, { code, redirectUri, state })
+					return json({ session: { expiresAt: session.expiresAt }, user }, { headers: { "set-cookie": session.cookie } } as any)
+				}
+			}
+
+			// Devices
+			if (method === "GET" && pathname.endsWith("/devices")) {
+				const sess = await getSession({ headers: req.headers })
+				if (!sess)
+					return json({ error: "unauthorized" }, 401)
+				const userId = (sess as any).session?.userId ?? null
+				if (!userId)
+					return json({ error: "unauthorized" }, 401)
+				const devices = await listDevices(String(userId))
+				return json({ devices })
+			}
+
+			// If we matched a known path but method is not allowed
+			if (allowed && !allowed.includes(method))
+				return json({ error: "method_not_allowed" }, 405, { headers: { allow: allowed.join(", ") } })
+
+			return json({ error: "not_found" }, 404)
+		}
+		catch (err: any) {
+			const message = err?.message ?? "internal_error"
+			const status = message === "invalid_credentials" || message === "invalid_token" ? 400 : message === "unauthorized" ? 401 : 500
+			return json({ error: message }, status)
+		}
 	}
 
 	const api: any = {
