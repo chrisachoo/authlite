@@ -31,6 +31,7 @@ export function createAuth(config: AuthConfig): AuthInstance {
 	const ttlMs = config.session?.ttlMs ?? 1000 * 60 * 60 * 24 * 7
 	const cookieName = config.session?.cookieName ?? "authlite"
 	const _rotateEveryMs = config.session?.rotateEveryMs ?? 0
+	const updateAgeMs = config.session?.updateAgeMs ?? 1000 * 60 * 60 * 24 // default 1 day
 	const verificationEmailTTL = config.verification?.emailTTLms ?? 1000 * 60 * 60 * 24
 	const passwordResetTTL = config.verification?.passwordResetTTLms ?? 1000 * 60 * 60
 
@@ -83,6 +84,21 @@ export function createAuth(config: AuthConfig): AuthInstance {
 		const user = await adapter.findUserById(s.userId)
 		if (!user)
 			return null
+
+		// Sliding session: extend expiration if accessed after updateAgeMs
+		const nowMs = Date.now()
+		const expiresAtMs = Number(s.expiresAt)
+		if (adapter.updateSessionExpiry && updateAgeMs > 0) {
+			const ageRemaining = expiresAtMs - nowMs
+			// If remaining lifetime is less than (ttl - updateAge), extend
+			if (ageRemaining < ttlMs - updateAgeMs) {
+				const newExpires = nowMs + ttlMs
+				await adapter.updateSessionExpiry(hashes[0]!, newExpires).catch(() => {})
+				if (cache) {
+					await cache.setSession(hashes[0]!, { session: { ...s, expiresAt: new Date(newExpires) }, user }, ttlMs).catch(() => {})
+				}
+			}
+		}
 
 		const out = { session: s, user }
 		if (cache) {
@@ -372,20 +388,56 @@ export function createAuth(config: AuthConfig): AuthInstance {
 			const isWrite = method === "POST" || method === "PUT" || method === "PATCH" || method === "DELETE"
 			if (isWrite) {
 				const ct = req.headers.get("content-type") ?? ""
-				if (!ct.toLowerCase().startsWith("application/json") && !pathname.includes("/oauth/"))
-					return json({ error: "unsupported_media_type" }, 415)
-				// Soft CSRF defense: validate same-origin when not explicitly cross-site
-				const origin = req.headers.get("origin") ?? ""
-				const referer = req.headers.get("referer") ?? ""
-				if (origin && new URL(origin).host !== url.host && !pathname.includes("/oauth/"))
-					return json({ error: "csrf_blocked" }, 403)
-				if (referer) {
-					try {
-						const rh = new URL(referer).host
-						if (rh !== url.host && !pathname.includes("/oauth/"))
+				const isOauthPath = pathname.includes("/oauth/")
+				const csrfCfg = config.csrf ?? {}
+				const originHeader = req.headers.get("origin") ?? ""
+				const refererHeader = req.headers.get("referer") ?? ""
+
+				// 1) Content-Type check unless globally disabled
+				if (!csrfCfg.disableCSRFCheck) {
+					if (!ct.toLowerCase().startsWith("application/json") && !isOauthPath)
+						return json({ error: "unsupported_media_type" }, 415)
+				}
+
+				// 2) Origin/Referrer checks unless disabled
+				if (!csrfCfg.disableCSRFCheck && !csrfCfg.disableOriginCheck) {
+					// Build trusted hosts set: same-origin + configured
+					const trustedHosts = new Set<string>([url.host])
+					for (const t of csrfCfg.trustedOrigins ?? []) {
+						try {
+							const h = t.includes("://") ? new URL(t).host : t
+							if (h)
+								trustedHosts.add(h)
+						}
+						catch {}
+					}
+					let originHost = ""
+					if (originHeader) {
+						try {
+							originHost = new URL(originHeader).host
+						}
+						catch {
+							originHost = ""
+						}
+					}
+					let refererHost = ""
+					if (refererHeader) {
+						try {
+							refererHost = new URL(refererHeader).host
+						}
+						catch {
+							refererHost = ""
+						}
+					}
+
+					if (!isOauthPath) {
+						// If Origin is present, it must be trusted
+						if (originHost && !trustedHosts.has(originHost))
+							return json({ error: "csrf_blocked" }, 403)
+						// If Referer is present, it must be trusted
+						if (refererHost && !trustedHosts.has(refererHost))
 							return json({ error: "csrf_blocked" }, 403)
 					}
-					catch {}
 				}
 			}
 			// Discover allowed methods for this path for better 405 handling

@@ -17,5 +17,3 @@ export function guard() {
 		await next()
 	}
 }
-
-
