@@ -80,6 +80,12 @@ export function drizzleSQLiteAdapter(db: any): DrizzleAdapter {
 		async updateAccountPassword(providerId, accountId, passwordHash) {
 			await db.update(account).set({ password: passwordHash }).where(and(eq(account.providerId, providerId), eq(account.accountId, accountId)))
 		},
+		async updateSessionExpiry(hash, newExpiresAtMs) {
+			await db
+				.update(session)
+				.set({ expiresAt: new Date(newExpiresAtMs), updatedAt: new Date(Date.now()) })
+				.where(eq(session.token, hash))
+		},
 		/* New helpers */
 		async updateUser(id, data) {
 			await db.update(user).set(data as any).where(eq(user.id, id))

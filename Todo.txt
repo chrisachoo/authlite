@@ -1,0 +1,78 @@
+Here's a **combined and prioritized to-do list** for your `authlite` package, modeled after `better-auth`. This is ranked from **most critical** (security and core functionality) to **nice-to-have** features (customization and edge cases):
+
+---
+
+## 🔒 High Priority (Must-Have)
+
+### ✅ Session Management
+
+* [ ] Implement secure session storage (DB or external storage).
+* [ ] Set default session expiration to 7 days (configurable).
+* [ ] Support `updateAge` to extend session expiration (default: 1 day).
+* [ ] Expose config options for session lifetime and `updateAge`.
+
+### ✅ CSRF Protection
+
+* [ ] Require **non-simple headers** or `Content-Type: application/json` for POST requests.
+  *(Non-simple headers are not in the [CORS safelisted headers list](https://developer.mozilla.org/en-US/docs/Glossary/CORS-safelisted_request_header))*
+* [ ] Validate `Origin` headers against trusted sources.
+* [ ] Default to app’s base URL as trusted; allow additional `trustedOrigins`.
+* [ ] Prevent mutations on `GET` requests. If unavoidable (e.g., OAuth), validate `nonce` and `state`.
+* [ ] Set session cookies with `SameSite=Lax` by default.
+* [ ] Add config to disable CSRF checks: `disableCSRFCheck`.
+* [ ] Add config to disable origin checks: `disableOriginCheck`.
+
+### ✅ Rate Limiting
+
+* [ ] Implement global rate limiting across all routes.
+* [ ] Apply **stricter limits** to sensitive routes (e.g., login, registration).
+* [ ] Allow configuration for rate limit thresholds.
+
+### ✅ IP Address Headers
+
+* [ ] Default to using `X-Forwarded-For` for IP detection.
+* [ ] Allow trusted headers via `ipAddressHeaders` config (e.g., `cf-connecting-ip`).
+* [ ] Ensure headers are only accepted from **trusted proxies**, not directly from users.
+* [ ] Add warning in docs to guide users on proper proxy configuration.
+
+---
+
+## 🟡 Medium Priority (Core Features)
+
+### ✅ Session Revocation
+
+* [ ] Implement server-side session revocation (admin/logged-in user can revoke sessions).
+* [ ] Enable users to revoke their own sessions across devices (log out from other sessions).
+* [ ] Ensure revoked sessions are invalidated immediately and removed from storage.
+
+### ✅ Secure Cookies
+
+* [ ] Set cookies with:
+
+  * `Secure` (when using HTTPS)
+  * `HttpOnly` (to block access from JS)
+  * `SameSite=Lax` (by default)
+* [ ] Allow cookie name customization to prevent fingerprinting.
+
+---
+
+## 🟢 Low Priority (Advanced / Optional Features)
+
+### ✅ Customizing Cookies
+
+* [ ] Expose config for:
+
+  * Custom cookie names
+  * Additional attributes (e.g., `path`, `domain`, `maxAge`)
+* [ ] Support `crossSubDomainCookies` config for shared auth across subdomains.
+* [ ] Allow plugins to override cookie options per environment (e.g., SSR, non-browser).
+
+### ✅ Trusted Origins
+
+* [ ] Block requests from unknown origins by default.
+* [ ] Add `trustedOrigins` config to whitelist known domains (e.g., frontend apps).
+* [ ] Help prevent CSRF and open redirect attacks.
+
+---
+
+Let me know if you'd like this as a **markdown doc**, **JSON schema**, or broken down into **GitHub issues** for tracking.

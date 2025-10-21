@@ -1,5 +1,5 @@
 {
-	"name": "zauth",
+	"name": "authlite",
 	"description": "A minimal, type-safe, and framework-agnostic authentication core for TypeScript with Drizzle ORM and session cookies.",
 	"version": "0.1.0",
 	"type": "module",
@@ -12,6 +12,11 @@
 		"./types": {
 			"types": "./dist/types.d.ts",
 			"default": "./dist/types.js"
+		},
+		"./helper": {
+			"types": "./dist/helper.d.ts",
+			"import": "./dist/helper.js",
+			"require": "./dist/helper.cjs"
 		},
 		"./drizzle-sqlite": {
 			"types": "./dist/drizzle-sqlite.d.ts",
@@ -33,15 +38,16 @@
 		"migrate": "node ./scripts/run-migrations.js",
 		"test": "pnpm run build && vitest run",
 		"schema:print": "ts-node ./scripts/print-schema.ts || node --loader ts-node/esm ./scripts/print-schema.ts || node ./scripts/print-schema.ts",
-		"prepublishOnly": "pnpm run build && pnpm run lint && pnpm run test"
+		"prepublishOnly": "pnpm run build && pnpm run lint && pnpm run test",
+		"prepare": "husky"
 	},
 	"keywords": [
 		"auth",
 		"authentication",
 		"authorization",
 		"oauth",
-		"zauth-core",
-		"zauth"
+		"authlite-core",
+		"authlite"
 	],
 	"dependencies": {
 		"@libsql/client": "^0.15.15",
@@ -57,9 +63,14 @@
 		"eslint": "^9.37.0",
 		"eslint-plugin-format": "^1.0.2",
 		"eslint-plugin-perfectionist": "^4.15.1",
+		"husky": "^9.1.7",
+		"lint-staged": "^16.2.5",
 		"prettier": "3.6.2",
 		"tsup": "^8.5.0",
 		"typescript": "^5.9.3",
 		"vitest": "^3.2.4"
+	},
+	"lint-staged": {
+		"**/*.{js,mjs,cjs,ts,mts,cts,yml,json}": "eslint --fix"
 	}
 }

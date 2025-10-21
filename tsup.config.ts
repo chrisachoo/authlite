@@ -5,6 +5,7 @@ export default defineConfig({
 	dts: true,
 	entry: {
 		"drizzle-sqlite": "src/adapters/drizzle-sqlite.ts",
+		"helper": "src/helper.ts",
 		"index": "src/index.ts",
 		"types": "src/types.entry.ts"
 	},
